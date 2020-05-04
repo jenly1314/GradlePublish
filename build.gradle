@@ -1,118 +1,41 @@
-group = PROJECT_GROUP
-version = PROJECT_VERSION
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
 
-apply plugin: 'com.jfrog.bintray'
-apply plugin: "com.jfrog.artifactory"
-apply plugin: 'maven-publish'
+buildscript {
+    apply from: 'versions.gradle'
+    repositories {
+        google()
+        jcenter()
 
-task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
-}
-
-task javadoc(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += configurations.compile
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-javadoc {
-    options{
-        encoding "UTF-8"
-        charSet 'UTF-8'
-        author true
-        version true
-        links "http://docs.oracle.com/javase/8/docs/api"
-        title PROJECT_ARTIFACTID
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:$versions.gradle"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin"
+        classpath "com.novoda:bintray-release:$versions.bintray_release"
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:$versions.dokka"
     }
 }
 
+allprojects {
+    repositories {
+        google()
+        jcenter()
 
-def pomConfig = {
-    licenses {
-        license {
-            name "The Apache Software License, Version 2.0"
-            url "http://www.apache.org/licenses/LICENSE-2.0.txt"
-            distribution "repo"
-        }
-    }
-    developers {
-        developer {
-            id DEVELOPER_ID
-            name DEVELOPER_NAME
-            email DEVELOPER_EMAIL
-        }
     }
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifactId PROJECT_ARTIFACTID
-            artifact javadocJar
-            artifact sourcesJar
-
-            pom{
-                packaging 'aar'
-            }
-            pom.withXml {
-                def root = asNode()
-                root.appendNode('description', PROJECT_DESCRIPTION)
-                root.children().last() + pomConfig
-            }
-        }
-    }
+task clean(type: Delete) {
+    delete rootProject.buildDir
 }
 
-afterEvaluate {
-    publishing.publications.mavenJava.artifact(bundleRelease)
-}
-
-// load from root project's 'local.properties'
-Properties properties = new Properties()
-properties.load(project.rootProject.file('local.properties').newDataInputStream())
-
-bintray {
-    user = properties.getProperty("bintray.user")
-    key = properties.getProperty("bintray.key")
-
-    publications = ['mavenJava']
-    publish = true
-
-    pkg {
-        repo = 'maven'
-        name = PROJECT_NAME
-        desc = PROJECT_DESCRIPTION
-        websiteUrl = PROJECT_WEBSITEURL
-        issueTrackerUrl = PROJECT_ISSUETRACKERURL
-        vcsUrl = PROJECT_VCSURL
-        licenses = ['Apache-2.0']
-        publicDownloadNumbers = true
-    }
-}
-
-artifactory {
-    contextUrl = 'http://oss.jfrog.org/artifactory'
-    resolve {
-        repository {
-            repoKey = 'libs-release'
+allprojects {
+    tasks.withType(Javadoc) {
+        options{
+            encoding "UTF-8"
+            charSet 'UTF-8'
+            links "http://docs.oracle.com/javase/8/docs/api"
         }
-    }
-    publish {
-        repository {
-            repoKey = 'oss-snapshot-local' //The Artifactory repository key to publish to
-            username = bintray.user
-            password = bintray.key
-            maven = true
-        }
-        defaults {
-            publications('mavenJava')
-            publishArtifacts = true
-        }
+        options.addStringOption('Xdoclint:none', '-quiet')
+        options.compilerArgs << "-Xlint:unchecked" << "- Xlint:deprecation"
+        failOnError false
     }
 }
