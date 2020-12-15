@@ -12,6 +12,9 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin"
         classpath "com.novoda:bintray-release:$versions.bintrayRelease"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:$versions.dokka"
+		
+//		classpath "com.github.dcendents:android-maven-gradle-plugin:2.0"
+//      classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.0"
     }
 }
 

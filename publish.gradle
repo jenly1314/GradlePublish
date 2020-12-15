@@ -1,120 +1,81 @@
-# bintray publish
-
-group = PROJECT_GROUP
-version = PROJECT_VERSION
-
-apply plugin: 'com.jfrog.bintray'
-apply plugin: "com.jfrog.artifactory"
 apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
+
+
+name 'Lib'
+group 'com.king'
+artifactId 'lib'
+version app_version.versionName
+licenses 'Apache-2.0'
+
+def gitUrl = 'https://github.com/jenly1314/${this.name}.git'
+def siteUrl = 'https://github.com/jenly1314/${this.name}'
+
+publishing {
+    publications {
+        Production(MavenPublication) {
+            artifact("$buildDir/outputs/aar/app-release.aar")
+            groupId
+            artifactId this.artifactId
+            version this.version
+
+            pom.withXml {
+                def dependenciesNode = asNode().appendNode('dependencies')
+
+                // Iterate over the implementation dependencies (we don't want the test ones), adding a <dependency> node for each
+                configurations.implementation.allDependencies.each {
+                    // Ensure dependencies such as fileTree are not included in the pom.
+                    if (it.name != 'unspecified') {
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', it.group)
+                        dependencyNode.appendNode('artifactId', it.name)
+                        dependencyNode.appendNode('version', it.version)
+                    }
+                }
+            }
+        }
+    }
+}
+
+bintray {
+    user = project.hasProperty('bintrayUser') ?: System.getenv('BINTRAY_USER')
+    key = project.hasProperty('bintrayApiKey') ?: System.getenv('BINTRAY_API_KEY')
+    publications = ['Production']
+    configurations = ['archives']
+    override = true
+    pkg {
+        repo = 'maven'
+        name = this.artifactId
+        description = "${this.name} for Android"
+        publish = true
+        publicDownloadNumbers = true
+        licenses = this.licenses
+        websiteUrl = siteUrl
+        vcsUrl = gitUrl
+        version {
+            name = this.version
+            desc = "${this.name} v${this.version}"
+            released = new Date()
+            vcsTag = this.version
+        }
+    }
+	configurations = ['archives']
+}
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
     classifier = 'sources'
 }
-
 task javadoc(type: Javadoc) {
+    failOnError false
     source = android.sourceSets.main.java.srcDirs
-    classpath += configurations.compile
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
 }
-
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from javadoc.destinationDir
 }
-
-javadoc {
-    options{
-        encoding "UTF-8"
-        charSet 'UTF-8'
-        author true
-        version true
-        links "http://docs.oracle.com/javase/8/docs/api"
-        title PROJECT_ARTIFACTID
-    }
-}
-
-
-def pomConfig = {
-    licenses {
-        license {
-            name "The Apache Software License, Version 2.0"
-            url "http://www.apache.org/licenses/LICENSE-2.0.txt"
-            distribution "repo"
-        }
-    }
-    developers {
-        developer {
-            id DEVELOPER_ID
-            name DEVELOPER_NAME
-            email DEVELOPER_EMAIL
-        }
-    }
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifactId PROJECT_ARTIFACTID
-            artifact javadocJar
-            artifact sourcesJar
-
-            pom{
-                packaging 'aar'
-            }
-            pom.withXml {
-                def root = asNode()
-                root.appendNode('description', PROJECT_DESCRIPTION)
-                root.children().last() + pomConfig
-            }
-        }
-    }
-}
-
-afterEvaluate {
-    publishing.publications.mavenJava.artifact(bundleRelease)
-}
-
-// load from root project's 'local.properties'
-Properties properties = new Properties()
-properties.load(project.rootProject.file('local.properties').newDataInputStream())
-
-bintray {
-    user = properties.getProperty("bintray.user")
-    key = properties.getProperty("bintray.key")
-
-    publications = ['mavenJava']
-    publish = true
-
-    pkg {
-        repo = 'maven'
-        name = PROJECT_NAME
-        desc = PROJECT_DESCRIPTION
-        websiteUrl = PROJECT_WEBSITEURL
-        issueTrackerUrl = PROJECT_ISSUETRACKERURL
-        vcsUrl = PROJECT_VCSURL
-        licenses = ['Apache-2.0']
-        publicDownloadNumbers = true
-    }
-}
-
-artifactory {
-    contextUrl = 'http://oss.jfrog.org/artifactory'
-    resolve {
-        repository {
-            repoKey = 'libs-release'
-        }
-    }
-    publish {
-        repository {
-            repoKey = 'oss-snapshot-local' //The Artifactory repository key to publish to
-            username = bintray.user
-            password = bintray.key
-            maven = true
-        }
-        defaults {
-            publications('mavenJava')
-            publishArtifacts = true
-        }
-    }
+artifacts {
+    archives javadocJar
+    archives sourcesJar
 }
