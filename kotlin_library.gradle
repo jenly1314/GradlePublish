@@ -1,9 +1,11 @@
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
-apply from: 'bintray.gradle'
-apply from: 'dokka.gradle'
-
+//plugins {
+//    id 'com.android.library'
+//    id 'kotlin-android'
+//}
+apply plugin: "com.android.library"
+apply plugin: "kotlin-android"
+apply plugin: "com.vanniktech.maven.publish"
+// apply from: 'dokka.gradle'
 
 android {
     compileSdkVersion build_versions.compileSdk
@@ -16,7 +18,7 @@ android {
         versionName app_version.versionName
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles 'consumer-rules.pro'
+        consumerProguardFiles "consumer-rules.pro"
     }
 
     buildTypes {
@@ -25,16 +27,22 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
 
     lintOptions {
         abortOnError false
         warning 'InvalidPackage'
     }
-
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$versions.kotlin"
 
     testImplementation "junit:junit:$versions.junit"

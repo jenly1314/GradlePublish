@@ -1,6 +1,8 @@
-apply plugin: 'com.android.library'
-apply from: 'bintray.gradle'
-
+//plugins {
+//    id 'com.android.library'
+//}
+apply plugin: "com.android.library"
+apply plugin: "com.vanniktech.maven.publish"
 
 android {
     compileSdkVersion build_versions.compileSdk
@@ -13,7 +15,7 @@ android {
         versionName app_version.versionName
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles 'consumer-rules.pro'
+        consumerProguardFiles "consumer-rules.pro"
     }
 
     buildTypes {
@@ -22,19 +24,20 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 
     lintOptions {
         abortOnError false
         warning 'InvalidPackage'
     }
-
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     testImplementation "junit:junit:$versions.junit"
     androidTestImplementation "androidx.test.ext:junit:$versions.androidExtJunit"
     androidTestImplementation "androidx.test.espresso:espresso-core:$versions.espressoCore"
-
 }

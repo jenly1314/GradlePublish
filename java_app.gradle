@@ -1,16 +1,19 @@
-apply plugin: 'com.android.application'
+plugins {
+    id 'com.android.application'
+}
 
 android {
     compileSdkVersion build_versions.compileSdk
     buildToolsVersion build_versions.buildTools
+
     defaultConfig {
         applicationId "com.king.app"
         minSdkVersion build_versions.minSdk
         targetSdkVersion build_versions.targetSdk
         versionCode app_version.versionCode
         versionName app_version.versionName
+
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        multiDexEnabled true
     }
 
     buildTypes {
@@ -19,16 +22,27 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 
+    lintOptions {
+        abortOnError false
+        warning 'InvalidPackage'
+    }
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
     implementation "androidx.appcompat:appcompat:$versions.appcompat"
+    implementation "com.google.android.material:material:$versions.material"
     implementation "androidx.constraintlayout:constraintlayout:$versions.constraintlayout"
 
     testImplementation "junit:junit:$versions.junit"
     androidTestImplementation "androidx.test.ext:junit:$versions.androidExtJunit"
     androidTestImplementation "androidx.test.espresso:espresso-core:$versions.espressoCore"
+
+    implementation project(path: ':lib')
 
 }
